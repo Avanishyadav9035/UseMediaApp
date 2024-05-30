@@ -1,21 +1,5 @@
 {
-  "version": 2,
-  "public": true,
-  "builds": [
-    {
-      "src": "public/index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "src/**/*",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "src/index.js"
-    }
+  "redirects": [
+    { "source": "/(.*)", "destination": "src/index.js", "permanent": true }
   ]
 }
-
