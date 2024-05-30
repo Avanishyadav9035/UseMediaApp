@@ -5,11 +5,13 @@ import ProfilePage from "scenes/profilePage";
 
 
 
+
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { themeSettings } from "./theme";
+import ChatPage from "scenes/ChatPage";
 
 
 
@@ -32,6 +34,10 @@ function App() {
             <Route
               path="/profile/:userId"
               element={isAuth ? <ProfilePage /> : <Navigate to="/" />}
+            />
+             <Route
+              path="/chat"
+              element={isAuth ? <ChatPage /> : <Navigate to="/user" />}
             />
           </Routes>
         </ThemeProvider>

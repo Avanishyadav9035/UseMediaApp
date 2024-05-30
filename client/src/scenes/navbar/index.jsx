@@ -17,6 +17,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  Badge,
 } from "@mui/material";
 import {
   Search,
@@ -31,6 +32,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { setMode, setLogout } from "state";
 import { useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import FlexBetween from "components/FlexBetween";
 
 const Navbar = () => {
@@ -38,10 +40,15 @@ const Navbar = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMessengerOpen, setIsMessengerOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [helpInput, setHelpInput] = useState(""); // State for help input
-  const [submittedQueries, setSubmittedQueries] = useState([]); // State for storing submitted queries
-  const [replyInput, setReplyInput] = useState(""); // State for reply input
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [helpInput, setHelpInput] = useState("");
+  const [submittedQueries, setSubmittedQueries] = useState([]);
+  const [replyInput, setReplyInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "New friend request", read: false },
+    { id: 2, text: "New message received", read: false },
+    { id: 3, text: "Profile update successful", read: true },
+  ]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -63,7 +70,7 @@ const Navbar = () => {
         ...prevQueries,
         { query: helpInput, replies: [] },
       ]);
-      setHelpInput(""); // Clear input after submission
+      setHelpInput("");
     } else {
       console.log("Input is empty");
     }
@@ -76,7 +83,7 @@ const Navbar = () => {
         updatedQueries[index].replies.push(replyInput);
         return updatedQueries;
       });
-      setReplyInput(""); // Clear input after submission
+      setReplyInput("");
     } else {
       console.log("Reply input is empty");
     }
@@ -84,27 +91,35 @@ const Navbar = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      // Check if the search query matches available content on the home page
       const isContentAvailable = checkContentAvailability(searchQuery);
 
       if (isContentAvailable) {
-        // Navigate to the home page
         navigate("/home");
       } else {
-        // Show message indicating that content is not available
         alert("Content not available for the search query.");
       }
 
-      setSearchQuery(""); // Clear search query after navigation or message
+      setSearchQuery("");
     } else {
       console.log("Search query is empty");
     }
   };
 
   const checkContentAvailability = (query) => {
-    // Placeholder function to check content availability (replace with actual logic)
-    // For demonstration, assume content is available if search query is not empty
     return query.trim() !== "";
+  };
+
+  const markAsRead = (id) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
+
+  const handleNotificationClick = (notificationId) => {
+    markAsRead(notificationId);
+    navigate("/notifications/" + notificationId);
   };
 
   return (
@@ -131,7 +146,6 @@ const Navbar = () => {
             gap="3rem"
             padding="0.1rem 1.5rem"
           >
-            {/* Search input field */}
             <InputBase
               placeholder="Search..."
               value={searchQuery}
@@ -149,7 +163,6 @@ const Navbar = () => {
         )}
       </FlexBetween>
 
-      {/* DESKTOP NAV */}
       {isNonMobileScreens ? (
         <FlexBetween gap="2rem">
           <IconButton onClick={() => dispatch(setMode())}>
@@ -159,11 +172,19 @@ const Navbar = () => {
               <LightMode sx={{ color: dark, fontSize: "25px" }} />
             )}
           </IconButton>
-          <IconButton onClick={() => setIsMessengerOpen(true)}>
+          <IconButton component={Link} to="/chat">
             <Message sx={{ fontSize: "25px" }} />
           </IconButton>
           <IconButton onClick={() => setIsNotificationsOpen(true)}>
-            <Notifications sx={{ fontSize: "25px" }} />
+            <Badge
+              badgeContent={
+                notifications.filter((notification) => !notification.read)
+                  .length
+              }
+              color="secondary"
+            >
+              <Notifications sx={{ fontSize: "25px" }} />
+            </Badge>
           </IconButton>
           <IconButton onClick={() => setIsHelpOpen(true)}>
             <Help sx={{ fontSize: "25px" }} />
@@ -202,7 +223,6 @@ const Navbar = () => {
         </IconButton>
       )}
 
-      {/* MOBILE NAV */}
       {!isNonMobileScreens && isMobileMenuToggled && (
         <Box
           position="fixed"
@@ -214,7 +234,6 @@ const Navbar = () => {
           minWidth="300px"
           backgroundColor={background}
         >
-          {/* CLOSE ICON */}
           <Box display="flex" justifyContent="flex-end" p="1rem">
             <IconButton
               onClick={() => setIsMobileMenuToggled(!isMobileMenuToggled)}
@@ -223,13 +242,11 @@ const Navbar = () => {
             </IconButton>
           </Box>
 
-          {/* MENU ITEMS */}
           <FlexBetween
             display="flex"
             flexDirection="column"
             justifyContent="center"
-            alignItems
-            ="center"
+            alignItems="center"
             gap="3rem"
           >
             <IconButton
@@ -242,11 +259,19 @@ const Navbar = () => {
                 <LightMode sx={{ color: dark, fontSize: "25px" }} />
               )}
             </IconButton>
-            <IconButton onClick={() => setIsMessengerOpen(true)}>
+            <IconButton component={Link} to="/chat">
               <Message sx={{ fontSize: "25px" }} />
             </IconButton>
             <IconButton onClick={() => setIsNotificationsOpen(true)}>
-              <Notifications sx={{ fontSize: "25px" }} />
+              <Badge
+                badgeContent={
+                  notifications.filter((notification) => !notification.read)
+                    .length
+                }
+                color="secondary"
+              >
+                <Notifications sx={{ fontSize: "25px" }} />
+              </Badge>
             </IconButton>
             <IconButton onClick={() => setIsHelpOpen(true)}>
               <Help sx={{ fontSize: "25px" }} />
@@ -281,32 +306,44 @@ const Navbar = () => {
         </Box>
       )}
 
-      {/* Notifications Dialog */}
       <Dialog
         open={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
       >
         <DialogTitle>Notifications</DialogTitle>
         <DialogContent>
-          {/* Notifications content goes here */}
-          <Typography>No new notifications</Typography>
+          {notifications.length === 0 ? (
+            <Typography>No new notifications</Typography>
+          ) : (
+            <List>
+              {notifications.map((notification) => (
+                <ListItem
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification.id)}
+                  sx={{
+                    backgroundColor: notification.read
+                      ? neutralLight
+                      : primaryLight,
+                    borderRadius: "5px",
+                    mb: "0.5rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  <ListItemText primary={notification.text} />
+                </ListItem>
+              ))}
+            </List>
+          )}
         </DialogContent>
       </Dialog>
 
-    {/* Messenger Dialog */}
-    <Dialog
-        open={isMessengerOpen}
-        onClose={() => setIsMessengerOpen(false)}
-      >
+      <Dialog open={isMessengerOpen} onClose={() => setIsMessengerOpen(false)}>
         <DialogTitle>Messenger</DialogTitle>
         <DialogContent>
-          {/* Messenger content goes here */}
           <Typography>No new messages</Typography>
         </DialogContent>
       </Dialog>
 
-
-      {/* Help Dialog */}
       <Dialog open={isHelpOpen} onClose={() => setIsHelpOpen(false)}>
         <DialogTitle>Help</DialogTitle>
         <DialogContent>
@@ -316,17 +353,16 @@ const Navbar = () => {
             variant="outlined"
             fullWidth
             margin="normal"
-            value={helpInput} // Bind to state
-            onChange={(e) => setHelpInput(e.target.value)} // Update state on change
+            value={helpInput}
+            onChange={(e) => setHelpInput(e.target.value)}
           />
           <Button
             variant="contained"
             color="primary"
-            onClick={handleHelpSubmit} // Handle submit
+            onClick={handleHelpSubmit}
           >
             Submit
           </Button>
-          {/* Reply Section after submitting a query */}
           {submittedQueries.length > 0 && (
             <>
               <Typography variant="h6" sx={{ mt: 2 }}>
@@ -347,19 +383,18 @@ const Navbar = () => {
                         ))}
                       </List>
                     )}
-                    {/* Reply input for normal replies */}
                     <TextField
                       label="Your Reply"
                       variant="outlined"
                       fullWidth
                       margin="normal"
-                      value={replyInput} // Bind to state
-                      onChange={(e) => setReplyInput(e.target.value)} // Update state on change
+                      value={replyInput}
+                      onChange={(e) => setReplyInput(e.target.value)}
                     />
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={handleReplySubmit(index)} // Handle submit
+                      onClick={handleReplySubmit(index)}
                     >
                       Submit Reply
                     </Button>
